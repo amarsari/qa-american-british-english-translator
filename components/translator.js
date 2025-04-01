@@ -3,6 +3,13 @@ const americanToBritishSpelling = require('./american-to-british-spelling.js');
 const americanToBritishTitles = require("./american-to-british-titles.js")
 const britishOnly = require('./british-only.js')
 
+const reverseDict = (obj) => {
+    return Object.assign(
+        {},
+        ...Object.entries(obj).map(([k, v]) => ({ [v]: k}))
+    );
+}
+
 class Translator {
     toBritishEnglish(text) {
         const dict = { ...americanOnly, ...americanToBritishSpelling };
@@ -11,7 +18,7 @@ class Translator {
         const translated = this.translate(
             text,
             dict,
-            title,
+            titles,
             timeRegex,
             "toBritish"
         );
@@ -22,12 +29,24 @@ class Translator {
         return translated;
     }
 
+    toAmericanEnglish(text) {
+        const dict = {...britishOnly, ...reverseDict(americanToBritishSpelling)};
+        const titles = reverseDict(americanToBritishTitles);
+        const timeRegex = /([1-9]|1[012]).[0-5][0-9]/g;
+        const translated = this.translate(text, dict, titles, timeRegex, "toAmerican");
+
+        if(!translated){
+            return text;
+        }
+        return translated;
+    }
+
     translate(text, dict, titles, timeRegex, locale) {
         const lowerText = text.toLowerCase();
         const matchesMap = {};
 
         //Search for titles/honorrifics and add them to the matchesMap object
-        Object.entries(entries).map(([k, v]) => {
+        Object.entries(titles).map(([k, v]) => {
             if (lowerText.includes(k)) {
                 matchesMap[k] = v.charAt(0).toUpperCase() + v.slice(1);
             }
@@ -70,9 +89,17 @@ class Translator {
         return [translation, translationWithHighlight];
     }
 
-    replaceAllWithHighlight(text, matchesMap) {
-        
+    replaceAll(text, matchesMap) {
+        const re = new RegExp(Object.keys(matchesMap).join("|"), "gi");
+        return text.replace(re, (matched) => matchesMap[matched.toLowerCase()]);
     }
+
+    replaceAllWithHighlight(text, matchesMap) {
+        const re = new RegExp(Object.keys(matchesMap).join("|"), "gi");
+        return text.replace(re, (matched) => {
+            return `<span class="highlight">${matchesMap[matched.toLowerCase()]}</span>`;
+        });
+    }    
 }
 
 module.exports = Translator;
