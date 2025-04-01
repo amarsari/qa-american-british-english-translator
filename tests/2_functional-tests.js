@@ -89,12 +89,12 @@ suite('Functional Tests', () => {
                 .request(server)
                 .post('/api/translate')
                 .send({
-                    text: 'Mangoes are my favorite fruit.',
-                    locale: 'british-to-american'
+                    text: "This one should be fine the way it is.",
+                    locale: "american-to-british",
                 })
                 .end((_, res) => {
                     assert.equal(res.status, 200);
-                    assert.equal(res.body.translation, 'Everything looks good to me');
+                    assert.equal(res.body.translation, "Everything looks good to me!");
                 });
                 done();
         });
